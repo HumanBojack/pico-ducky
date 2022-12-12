@@ -2,15 +2,8 @@ from board import *
 import digitalio
 import storage
 
-noStorageStatus = False
-noStoragePin = digitalio.DigitalInOut(GP15)
-noStoragePin.switch_to_input(pull=digitalio.Pull.UP)
-noStorageStatus = not noStoragePin.value
-
-if(noStorageStatus == True):
-    # don't show USB drive to host PC
+# Only activate the usb_drive if the GP0 pin is connected
+progStatusPin = digitalio.DigitalInOut(GP0)
+progStatusPin.switch_to_input(pull=digitalio.Pull.UP)
+if progStatusPin.value:
     storage.disable_usb_drive()
-    print("Disabling USB drive")
-else:
-    # normal boot
-    print("USB drive enabled")
