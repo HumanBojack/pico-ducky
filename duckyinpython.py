@@ -1,6 +1,7 @@
 # License : GPLv2.0
 # copyright (c) 2021  Dave Bailey
 # Author: Dave Bailey (dbisu, @daveisu)
+# TODO: Use adafruit-circuitpython-ducky ?
 
 import usb_hid
 from adafruit_hid.keyboard import Keyboard
@@ -26,6 +27,7 @@ import asyncio
 
 led = pwmio.PWMOut(LED, frequency=5000, duty_cycle=0)
 
+# TODO: check for removing
 def led_pwm_up(led):
     for i in range(100):
         # PWM LED up and down
@@ -112,6 +114,7 @@ def parseLine(line):
     elif(line[0:12] == "DEFAULTDELAY"):
         defaultDelay = int(line[13:]) * 10
     elif(line[0:3] == "LED"):
+        # TODO change to led.value = !led.value
         if(led.value == True):
             led.value = False
         else:
@@ -119,6 +122,9 @@ def parseLine(line):
     else:
         newScriptLine = convertLine(line)
         runScriptLine(newScriptLine)
+
+    # TODO: add TAB support (layout.send(keycode.TAB)) => https://github.com/adafruit/Adafruit_CircuitPython_HID
+    # Seems like it's already supported
 
 kbd = Keyboard(usb_hid.devices)
 layout = KeyboardLayout(kbd)
@@ -151,8 +157,7 @@ def getProgrammingStatus():
     # see setup mode for instructions
     progStatusPin = digitalio.DigitalInOut(GP0)
     progStatusPin.switch_to_input(pull=digitalio.Pull.UP)
-    progStatus = not progStatusPin.value
-    return(progStatus)
+    return progStatusPin.value
 
 
 defaultDelay = 0
@@ -162,6 +167,7 @@ def runScript(file):
 
     duckyScriptPath = file
     try:
+        # TODO: use with open
         f = open(duckyScriptPath,"r",encoding='utf-8')
         previousLine = ""
         for line in f:
@@ -179,6 +185,7 @@ def runScript(file):
         print("Unable to open file ", file)
 
 def selectPayload():
+    # TODO: simplify
     global payload1Pin, payload2Pin, payload3Pin, payload4Pin
     payload = "payload.dd"
     # check switch status
@@ -214,6 +221,7 @@ def selectPayload():
 
 
 async def blink_pico_led(led):
+    # TODO: simplify
     print("starting blink_pico_led")
     led_state = False
     while True:
@@ -251,6 +259,7 @@ async def monitor_buttons(button1):
         if(button1Pushed):
             print("Button 1 pushed")
             button1Down = True
+        # TODO remove
         if(button1Released):
             print("Button 1 released")
             if(button1Down):
@@ -268,11 +277,9 @@ async def monitor_buttons(button1):
         await asyncio.sleep(0)
 
 
-
-progStatus = False
 progStatus = getProgrammingStatus()
 
-if(progStatus == False):
+if progStatus:
     # not in setup mode, inject the payload
     payload = selectPayload()
     print("Running ", payload)
