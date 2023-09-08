@@ -1,7 +1,7 @@
 # License : GPLv2.0
 # copyright (c) 2021  Dave Bailey
-# Author: Dave Bailey (dbisu, @daveisu)
-# TODO: Use adafruit-circuitpython-ducky ?
+# Author: Dave Bailey (dbisu, @daveisu), Romain Spychala
+# TODO: Use adafruit-circuitpython-ducky ? https://github.com/adafruit/Adafruit_CircuitPython_Ducky/blob/main/adafruit_ducky.py
 
 import usb_hid
 from adafruit_hid.keyboard import Keyboard
@@ -12,14 +12,14 @@ from adafruit_hid.keycode import Keycode
 
 # uncomment these lines for non_US keyboards
 # replace LANG with appropriate language
-#from keyboard_layout_win_LANG import KeyboardLayout
-#from keycode_win_LANG import Keycode
+# from keyboard_layout_win_LANG import KeyboardLayout
+# from keycode_win_LANG import Keycode
 
 import supervisor
 
 import time
 import digitalio
-from digitalio import DigitalInOut, Pull
+
 from adafruit_debouncer import Debouncer
 from board import *
 import asyncio
