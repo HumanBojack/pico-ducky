@@ -135,13 +135,6 @@ payload3Pin.switch_to_input(pull=digitalio.Pull.UP)
 payload4Pin = digitalio.DigitalInOut(GP11)
 payload4Pin.switch_to_input(pull=digitalio.Pull.UP)
 
-def getProgrammingStatus():
-    # check GP0 for setup mode
-    # see setup mode for instructions
-    progStatusPin = digitalio.DigitalInOut(GP0)
-    progStatusPin.switch_to_input(pull=digitalio.Pull.UP)
-    return progStatusPin.value
-
 
 defaultDelay = 0
 
@@ -240,20 +233,6 @@ async def monitor_buttons(button1):
 
         await asyncio.sleep(0)
 
-
-progStatus = getProgrammingStatus()
-
-if progStatus:
-    # not in setup mode, inject the payload
-    payload = selectPayload()
-    print("Running ", payload)
-    runScript(payload)
-
-    print("Done")
-else:
-    print("Update your payload")
-
-led_state = False
 
 async def main_loop():
     global led,button1
