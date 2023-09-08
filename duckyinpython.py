@@ -85,24 +85,32 @@ def write_string(line):
 
 def parse_line(line):
     global default_delay
-    if(line[0:3] == "REM"):
+    if line[0:3] == "REM":
         # ignore ducky script comments
         pass
+    elif line[0:5] == "DELAY":
+        # Sleep for specified number of milliseconds
+        time.sleep(float(line[6:]) / 1000)
+    elif line[0:6] == "STRING":
+        # Type the following string
         write_string(line[7:])
+    elif line[0:5] == "PRINT":
+        # Print the following string to the console
         print("[SCRIPT]: " + line[6:])
-    elif(line[0:6] == "IMPORT"):
-        runScript(line[7:])
+    elif line[0:6] == "IMPORT":
+        # Import another ducky script and run it
         run_script(line[7:])
-        defaultDelay = int(line[14:]) * 10
-    elif(line[0:12] == "DEFAULTDELAY"):
+    elif line[0:13] == "DEFAULT_DELAY":
+        # Set the default delay for each command
         default_delay = int(line[14:])
-    elif(line[0:3] == "LED"):
-        # TODO change to led.value = !led.value
+    elif line[0:12] == "DEFAULTDELAY":
+        # Set the default delay for each command
         default_delay = int(line[13:])
-            led.value = False
-        else:
-            led.value = True
+    elif line[0:3] == "LED":
+        # toggle the pico led
+        led.value = not led.value
     else:
+        # otherwise, convert the line and run it
         new_script_line = convert_line(line)
         run_script_line(new_script_line)
 
