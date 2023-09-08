@@ -198,36 +198,24 @@ async def blink_pico_led(led):
 
 
 async def monitor_buttons(run_button):
+    payload = "payload.dd"
     while True:
-        button1.update()
+        run_button.update()
+        run_button_released = run_button.rose
 
-        button1Pushed = button1.fell
-        button1Released = button1.rose
-        button1Held = not button1.value
+        # Check if a payload selection button is pressed and set the payload accordingly
+        payload = monitor_payload_selection() or payload
 
-        if(button1Pushed):
-            print("Button 1 pushed")
-            button1Down = True
-        # TODO remove
-        if(button1Released):
-            print("Button 1 released")
-            if(button1Down):
-                print("push and released")
-
-        if(button1Released):
-            if(button1Down):
-                # Run selected payload
-                payload = selectPayload()
-                print("Running ", payload)
-                runScript(payload)
-                print("Done")
-            button1Down = False
+        if run_button_released:
+            # Run selected payload
+            print("Running ", payload)
+            run_script(payload)
+            print("Done")
 
         await asyncio.sleep(0)
 
 
 async def main_loop():
-    global led,button1
     pico_led_task = asyncio.create_task(blink_pico_led(led))
     button_task = asyncio.create_task(monitor_buttons(run_button))
     await asyncio.gather(pico_led_task, button_task)
