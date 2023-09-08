@@ -43,27 +43,13 @@ Install and have your USB Rubber Ducky working in less than 5 minutes.
 
 11. Find a script [here](https://github.com/hak5/usbrubberducky-payloads) or [create your own one using Ducky Script](https://docs.hak5.org/hak5-usb-rubber-ducky/duckyscript-tm-quick-reference) and save it as `payload.dd` in the Pico.
 
-12. Be careful, if your device isn't in [setup mode](#setup-mode), the device will reboot and after half a second, the script will run.
-
 ### Setup mode
 
-To edit the payload, enter setup mode by connecting the pin 1 (`GP0`) to pin 3 (`GND`), this will stop the pico-ducky from injecting the payload in your own machine.
+To edit the payload, enter setup mode by connecting the pin 1 (`GP0`) to pin 3 (`GND`) while plugging the Pico, this will allow you to edit the payload and the script.
 The easiest way to so is by using a jumper wire between those pins as seen bellow.
 
 ![Setup mode with a jumper](images/setup-mode.png)
 
-### USB enable/disable mode
-
-If you need the pico-ducky to not show up as a USB mass storage device for stealth, follow these instructions.  
-Enter setup mode.    
-Copy your payload script to the pico-ducky.  
-Disconnect the pico from your host PC.
-Connect a jumper wire between pin 18 (`GND`) and pin 20 (`GPIO15`).  
-This will prevent the pico-ducky from showing up as a USB drive when plugged into the target computer.  
-Remove the jumper and reconnect to your PC to reprogram.
-The default mode is USB mass storage enabled.   
-
-![USB enable/disable mode](images/usb-boot-mode.png)
 
 ### Changing Keyboard Layouts
 
@@ -133,7 +119,17 @@ keyboard_layout_win_de.mpy
 keycode_win_de.mpy
 ```
 
+## Run Scripts
+Once the device is connected to a computer, you can run the scripts.
+First, you need to select the script you want to run. Temporarily connect the pin corresponding to the script you want to run to select it :
+- Connecting pin 4 (`GP4`) to ground will select the `payload.dd` script.
+- Connecting pin 5 (`GP5`) to ground will select the `payload2.dd` script.
+- Connecting pin 10 (`GP10`) to ground will select the `payload3.dd` script.
+- Connecting pin 11 (`GP11`) to ground will select the `payload4.dd` script.
+- `payload.dd` is the default script if no pin is connected to ground.
 
+Once the script is selected, you can run it by temporarily connecting the pin 22 (`GP22`) to ground.
+The led will stop blinking during the execution of the script.
 
 ## Useful links and resources
 
