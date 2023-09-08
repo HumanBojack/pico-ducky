@@ -22,27 +22,11 @@ import digitalio
 from digitalio import DigitalInOut, Pull
 from adafruit_debouncer import Debouncer
 from board import *
-import pwmio
 import asyncio
 
-led = pwmio.PWMOut(LED, frequency=5000, duty_cycle=0)
 
-# TODO: check for removing
-def led_pwm_up(led):
-    for i in range(100):
-        # PWM LED up and down
-        if i < 50:
-            led.duty_cycle = int(i * 2 * 65535 / 100)  # Up
-        time.sleep(0.01)
-def led_pwm_down(led):
-    for i in range(100):
-        # PWM LED up and down
-        if i >= 50:
-            led.duty_cycle = 65535 - int((i - 50) * 2 * 65535 / 100)  # Down
-        time.sleep(0.01)
-
-# led = digitalio.DigitalInOut(LED)
-# led.direction = digitalio.Direction.OUTPUT
+led = digitalio.DigitalInOut(LED)
+led.direction = digitalio.Direction.OUTPUT
 
 duckyCommands = {
     'WINDOWS': Keycode.WINDOWS, 'GUI': Keycode.GUI,
@@ -135,7 +119,6 @@ supervisor.disable_autoreload()
 # sleep at the start to allow the device to be recognized by the host computer
 time.sleep(.5)
 
-led_pwm_up(led)
 
 #init button
 button1_pin = DigitalInOut(GP22) # defaults to input
@@ -221,29 +204,10 @@ def selectPayload():
 
 
 async def blink_pico_led(led):
-    # TODO: simplify
-    print("starting blink_pico_led")
-    led_state = False
     while True:
-        if led_state:
-            #led_pwm_up(led)
-            print("led up")
-            for i in range(100):
-                # PWM LED up and down
-                if i < 50:
-                    led.duty_cycle = int(i * 2 * 65535 / 100)  # Up
-                await asyncio.sleep(0.01)
-            led_state = False
-        else:
-            #led_pwm_down(led)
-            print("led down")
-            for i in range(100):
-                # PWM LED up and down
-                if i >= 50:
-                    led.duty_cycle = 65535 - int((i - 50) * 2 * 65535 / 100)  # Down
-                await asyncio.sleep(0.01)
-            led_state = True
-        await asyncio.sleep(0)
+        led.value = not led.value
+        await asyncio.sleep(1)
+
 
 async def monitor_buttons(button1):
     global inBlinkeyMode, inMenu, enableRandomBeep, enableSirenMode,pixel
