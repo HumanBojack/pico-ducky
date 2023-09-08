@@ -52,9 +52,8 @@ aliases = {
 }
 
 
-def convertLine(line):
+def convert_line(line):
     newline = []
-    # print(line)
     # loop on each key - the filter removes empty values
     for key in filter(None, line.split(" ")):
         key = key.upper()
@@ -69,129 +68,117 @@ def convertLine(line):
         else:
             # if it's not a known key name, show the error for diagnosis
             print(f"Unknown key: <{key}>")
-    # print(newline)
     return newline
 
-def runScriptLine(line):
+
+# Press key(s) and release
+def run_script_line(line):
     for k in line:
-        kbd.press(k)
-    kbd.release_all()
+        keybord_device.press(k)
+    keybord_device.release_all()
 
-def sendString(line):
-    layout.write(line)
 
-def parseLine(line):
-    global defaultDelay
+# Type a string
+def write_string(line):
+    keyboard_layout.write(line)
+
+
+def parse_line(line):
+    global default_delay
     if(line[0:3] == "REM"):
         # ignore ducky script comments
         pass
-    elif(line[0:5] == "DELAY"):
-        time.sleep(float(line[6:])/1000)
-    elif(line[0:6] == "STRING"):
-        sendString(line[7:])
-    elif(line[0:5] == "PRINT"):
+        write_string(line[7:])
         print("[SCRIPT]: " + line[6:])
     elif(line[0:6] == "IMPORT"):
         runScript(line[7:])
-    elif(line[0:13] == "DEFAULT_DELAY"):
+        run_script(line[7:])
         defaultDelay = int(line[14:]) * 10
     elif(line[0:12] == "DEFAULTDELAY"):
-        defaultDelay = int(line[13:]) * 10
+        default_delay = int(line[14:])
     elif(line[0:3] == "LED"):
         # TODO change to led.value = !led.value
-        if(led.value == True):
+        default_delay = int(line[13:])
             led.value = False
         else:
             led.value = True
     else:
-        newScriptLine = convertLine(line)
-        runScriptLine(newScriptLine)
+        new_script_line = convert_line(line)
+        run_script_line(new_script_line)
 
-    # TODO: add TAB support (layout.send(keycode.TAB)) => https://github.com/adafruit/Adafruit_CircuitPython_HID
-    # Seems like it's already supported
 
-kbd = Keyboard(usb_hid.devices)
-layout = KeyboardLayout(kbd)
+# init keyboard
+keybord_device = Keyboard(usb_hid.devices)
+keyboard_layout = KeyboardLayout(keybord_device)
 
 # turn off automatically reloading when files are written to the pico
 supervisor.disable_autoreload()
 
-# sleep at the start to allow the device to be recognized by the host computer
-time.sleep(.5)
+# Initialize the run button
+run_button_pin = digitalio.DigitalInOut(GP22)  # Set button pin
+run_button_pin.pull = digitalio.Pull.UP  # Enable internal pull-up resistor
+run_button = Debouncer(run_button_pin)  # Initialize Debouncer class for button
+
+# Initialize payload selection switches
+payload_pins = [  # Create a list of payload pins
+    digitalio.DigitalInOut(GP4),
+    digitalio.DigitalInOut(GP5),
+    digitalio.DigitalInOut(GP10),
+    digitalio.DigitalInOut(GP11),
+]
+
+for pin in payload_pins:
+    pin.switch_to_input(
+        pull=digitalio.Pull.UP
+    )  # Set each pin as input with pull-up resistor
 
 
-#init button
-button1_pin = DigitalInOut(GP22) # defaults to input
-button1_pin.pull = Pull.UP      # turn on internal pull-up resistor
-button1 =  Debouncer(button1_pin)
-
-#init payload selection switch
-payload1Pin = digitalio.DigitalInOut(GP4)
-payload1Pin.switch_to_input(pull=digitalio.Pull.UP)
-payload2Pin = digitalio.DigitalInOut(GP5)
-payload2Pin.switch_to_input(pull=digitalio.Pull.UP)
-payload3Pin = digitalio.DigitalInOut(GP10)
-payload3Pin.switch_to_input(pull=digitalio.Pull.UP)
-payload4Pin = digitalio.DigitalInOut(GP11)
-payload4Pin.switch_to_input(pull=digitalio.Pull.UP)
+default_delay = 0
 
 
-defaultDelay = 0
+def run_script(file):
+    global default_delay
 
-def runScript(file):
-    global defaultDelay
-
-    duckyScriptPath = file
     try:
-        # TODO: use with open
-        f = open(duckyScriptPath,"r",encoding='utf-8')
-        previousLine = ""
-        for line in f:
-            line = line.rstrip()
-            if(line[0:6] == "REPEAT"):
-                for i in range(int(line[7:])):
-                    #repeat the last command
-                    parseLine(previousLine)
-                    time.sleep(float(defaultDelay)/1000)
-            else:
-                parseLine(line)
-                previousLine = line
-            time.sleep(float(defaultDelay)/1000)
-    except OSError as e:
+        with open(file, "r", encoding="utf-8") as f:
+            previous_line = ""
+            for line in f:
+                line = line.rstrip()
+                if line[0:6] == "REPEAT":
+                    for _ in range(int(line[7:]) - 1):
+                        # repeat the last command
+                        parse_line(previous_line)
+                        time.sleep(float(default_delay) / 1000)
+                else:
+                    parse_line(line)
+                    previous_line = line
+                time.sleep(float(default_delay) / 1000)
+    except OSError:
         print("Unable to open file ", file)
 
-def selectPayload():
-    # TODO: simplify
-    global payload1Pin, payload2Pin, payload3Pin, payload4Pin
-    payload = "payload.dd"
-    # check switch status
-    # payload1 = GPIO4 to GND
-    # payload2 = GPIO5 to GND
-    # payload3 = GPIO10 to GND
-    # payload4 = GPIO11 to GND
-    payload1State = not payload1Pin.value
-    payload2State = not payload2Pin.value
-    payload3State = not payload3Pin.value
-    payload4State = not payload4Pin.value
 
+def monitor_payload_selection():
+    # Set default payload to "payload.dd"
+    payload = None
 
-    if(payload1State == True):
+    # Check the status of each button
+    is_button1_pressed = not payload_pins[0].value
+    is_button2_pressed = not payload_pins[1].value
+    is_button3_pressed = not payload_pins[2].value
+    is_button4_pressed = not payload_pins[3].value
+
+    # Determine which button is pressed and set the payload accordingly
+    if is_button1_pressed:
         payload = "payload.dd"
-
-    elif(payload2State == True):
+    elif is_button2_pressed:
         payload = "payload2.dd"
-
-    elif(payload3State == True):
+    elif is_button3_pressed:
         payload = "payload3.dd"
-
-    elif(payload4State == True):
+    elif is_button4_pressed:
         payload = "payload4.dd"
 
-    else:
-        # if all pins are high, then no switch is present
-        # default to payload1
-        payload = "payload.dd"
-
+    if payload:
+        print("Selected payload: ", payload)
 
     return payload
 
@@ -202,10 +189,7 @@ async def blink_pico_led(led):
         await asyncio.sleep(1)
 
 
-async def monitor_buttons(button1):
-    global inBlinkeyMode, inMenu, enableRandomBeep, enableSirenMode,pixel
-    print("starting monitor_buttons")
-    button1Down = False
+async def monitor_buttons(run_button):
     while True:
         button1.update()
 
@@ -237,7 +221,8 @@ async def monitor_buttons(button1):
 async def main_loop():
     global led,button1
     pico_led_task = asyncio.create_task(blink_pico_led(led))
-    button_task = asyncio.create_task(monitor_buttons(button1))
+    button_task = asyncio.create_task(monitor_buttons(run_button))
     await asyncio.gather(pico_led_task, button_task)
+
 
 asyncio.run(main_loop())
